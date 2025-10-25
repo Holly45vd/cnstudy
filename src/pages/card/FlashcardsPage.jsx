@@ -20,6 +20,19 @@ function shuffle(arr, seed = Date.now()) {
   return a;
 }
 
+/** koPron 자동 주입(발음 필드 보정) */
+function normalizeKoPron(word) {
+  if (word?.koPron || word?.koPronunciation || word?.pronunciation_ko) return word;
+  let koPron = "";
+  if (Array.isArray(word?.pronunciation) && word.pronunciation.length) {
+    const zh = word?.zh ?? word?.hanzi ?? word?.id;
+    const exact = word.pronunciation.find((p) => p?.label === zh && p?.ko);
+    koPron = exact?.ko || word.pronunciation[0]?.ko || "";
+  }
+  if (!koPron) return word;
+  return { ...word, koPron };
+}
+
 export default function FlashcardsPage() {
   const { unitId: unitIdParam } = useParams();
   const navigate = useNavigate();
@@ -56,7 +69,9 @@ export default function FlashcardsPage() {
       try {
         const u = await getUnit(String(unitId));
         const ids = Array.isArray(u?.vocabIds) ? u.vocabIds.map(String) : [];
-        const words = await getWordsByIds(ids);
+        const raw = await getWordsByIds(ids);
+        // koPron 보정
+        const words = raw.map(normalizeKoPron);
         setWordsAll(words);
       } catch (e) {
         console.error(e);
