@@ -21,6 +21,9 @@ import WordsAdmin from "../admin/WordsAdmin";
 import UnitsAdmin from "../admin/UnitsAdmin";
 import DailiesAdmin from "../admin/DailiesAdmin";
 
+/* Flashcards */
+import FlashcardsPage from "../pages/card/FlashcardsPage";
+
 /**
  * GitHub Pages 배포용: basename 반드시 "/cnstudy"
  */
@@ -47,6 +50,10 @@ export const router = createBrowserRouter(
 
         { path: "pronunciation", element: <PronunciationPage /> },
         { path: "everyday/:date?", element: <EverydayPage /> },
+
+        /* Flashcards route 추가 */
+{ path: "flashcards", element: <FlashcardsPage /> },
+{ path: "flashcards/:unitId", element: <FlashcardsPage /> },
 
         {
           path: "admin",
