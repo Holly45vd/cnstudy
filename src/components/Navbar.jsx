@@ -1,4 +1,3 @@
-// src/components/Navbar.jsx
 import React, { useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import AppBar from "@mui/material/AppBar";
@@ -10,9 +9,9 @@ import Box from "@mui/material/Box";
 /* Icons */
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import TodayIcon from "@mui/icons-material/Today";
-import RecordVoiceOverIcon from "@mui/icons-material/RecordVoiceOver";
+import SchoolIcon from "@mui/icons-material/School"; // 문법 탭 아이콘
 import SettingsIcon from "@mui/icons-material/Settings";
-import StyleIcon from "@mui/icons-material/Style"; // ✅ 플래시카드
+import StyleIcon from "@mui/icons-material/Style"; // 플래시카드
 
 function today() {
   const d = new Date();
@@ -25,12 +24,15 @@ export default function Navbar() {
   const nav = useNavigate();
   const { pathname } = useLocation();
 
+  // 탭 활성 감지 규칙
+  // - /grammar  -> grammar 탭
+  // - /units/... -> units 탭 (유닛 내부의 /units/:id/grammar 포함)
   const value = useMemo(() => {
+    if (pathname.startsWith("/grammar")) return "grammar";                 // 전체 문법 페이지
     if (pathname.startsWith("/everyday")) return "everyday";
-    if (pathname.startsWith("/pronunciation")) return "pronunciation";
-    if (pathname.startsWith("/flashcards")) return "flashcards"; // ✅ 추가
+    if (pathname.startsWith("/flashcards")) return "flashcards";
     if (pathname.startsWith("/admin")) return "admin";
-    return "units";
+    return "units";                                                        // 유닛 관련 경로 전체
   }, [pathname]);
 
   const handleChange = (_e, newValue) => {
@@ -41,10 +43,10 @@ export default function Navbar() {
       case "everyday":
         nav(`/everyday/${today()}`);
         break;
-      case "pronunciation":
-        nav("/pronunciation");
+      case "grammar":
+        nav("/grammar"); // ✅ 전체 문법 한줄 요약 페이지로 이동
         break;
-      case "flashcards": // ✅ 추가
+      case "flashcards":
         nav("/flashcards");
         break;
       case "admin":
@@ -85,8 +87,8 @@ export default function Navbar() {
           >
             <BottomNavigationAction label="유닛" value="units" icon={<MenuBookIcon />} />
             <BottomNavigationAction label="데일리" value="everyday" icon={<TodayIcon />} />
-            <BottomNavigationAction label="발음" value="pronunciation" icon={<RecordVoiceOverIcon />} />
-            <BottomNavigationAction label="카드" value="flashcards" icon={<StyleIcon />} /> {/* ✅ 추가 */}
+            <BottomNavigationAction label="문법" value="grammar" icon={<SchoolIcon />} />
+            <BottomNavigationAction label="카드" value="flashcards" icon={<StyleIcon />} />
             <BottomNavigationAction label="Admin" value="admin" icon={<SettingsIcon />} />
           </BottomNavigation>
         </Box>

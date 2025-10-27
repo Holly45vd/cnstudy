@@ -1,4 +1,3 @@
-// src/components/FlashcardCard.jsx
 import React, { useMemo } from "react";
 import {
   Card, CardContent, Typography, Stack, IconButton, Chip, Box, Divider, Button
@@ -96,7 +95,7 @@ export default function FlashcardCard({ word, flipped, onFlip, onGood, passed })
             fontWeight: 900,
             fontSize: 12,
             letterSpacing: 1,
-            bgcolor: "#1976d2", // MUI primary 기본
+            bgcolor: "#1976d2",
             color: "white",
             boxShadow: "0 4px 12px rgba(25,118,210,0.35)",
           }}
@@ -105,11 +104,12 @@ export default function FlashcardCard({ word, flipped, onFlip, onGood, passed })
         </Box>
       )}
 
+      {/* 앞면 */}
       {!flipped ? (
         <CardContent sx={{ width: "100%", display: "flex", flexDirection: "column" }}>
           <Stack spacing={1.25} alignItems="center" sx={{ flex: 1 }}>
             <Stack direction="row" alignItems="center" spacing={1}>
-              {/* 한자 크게 */}
+              {/* 한자 */}
               <Typography
                 sx={{ fontWeight: 900, letterSpacing: 0.5, lineHeight: 1.05, fontSize: { xs: 48, sm: 64, md: 72 } }}
               >
@@ -125,7 +125,7 @@ export default function FlashcardCard({ word, flipped, onFlip, onGood, passed })
               </IconButton>
             </Stack>
 
-            {/* 병음/한글발음 작게 */}
+            {/* 병음 + 한글발음 */}
             <Typography sx={{ color: "text.secondary", fontSize: { xs: 14, sm: 15 }, mt: 0.5 }}>
               {pinyin}{displayKoPron ? `  ${displayKoPron}` : ""}
             </Typography>
@@ -138,13 +138,12 @@ export default function FlashcardCard({ word, flipped, onFlip, onGood, passed })
                 ))}
               </Stack>
             )}
-
           </Stack>
 
-          {/* 카드 내부 하단 컨트롤: 통과 버튼만 */}
+          {/* 통과 버튼 */}
           <Stack direction="row" spacing={1} justifyContent="center" sx={{ mt: 2 }}>
             <Button
-              variant={passed ? "contained" : "outlined"}  // 기본 흰색 → 통과시 파란색
+              variant={passed ? "contained" : "outlined"}
               color="primary"
               onClick={(e) => { e.stopPropagation(); onGood?.(); }}
               startIcon={passed ? <span>✓</span> : null}
@@ -154,6 +153,7 @@ export default function FlashcardCard({ word, flipped, onFlip, onGood, passed })
           </Stack>
         </CardContent>
       ) : (
+        /* 뒷면 */
         <CardContent sx={{ width: "100%", display: "flex", flexDirection: "column" }}>
           <Stack spacing={1.25} alignItems="center" sx={{ flex: 1 }}>
             {/* 뜻 크게 */}
@@ -163,6 +163,7 @@ export default function FlashcardCard({ word, flipped, onFlip, onGood, passed })
               {ko}
             </Typography>
 
+            {/* 예문 */}
             {(sentence || sentencePinyin || sentenceKo) && (
               <Box
                 sx={{
@@ -194,29 +195,32 @@ export default function FlashcardCard({ word, flipped, onFlip, onGood, passed })
 
                 {(sentencePinyin || sentenceKo) && <Divider sx={{ my: 1 }} />}
 
+                {/* ✅ 병음 + 한국어 발음 표시 */}
                 {sentencePinyin && (
-                  <Stack direction="row" spacing={1} alignItems="center">
+                  <Stack direction="column" spacing={0.5} alignItems="flex-start">
                     <Typography variant="body2" color="text.secondary">
                       {sentencePinyin}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {freeTextPinyinToKorean(sentencePinyin)}
                     </Typography>
                   </Stack>
                 )}
 
+                {/* 예문 해석 */}
                 {sentenceKo && (
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                     {sentenceKo}
                   </Typography>
                 )}
               </Box>
             )}
-
-
           </Stack>
 
-          {/* 카드 내부 하단 컨트롤: 통과 버튼만 */}
+          {/* 통과 버튼 */}
           <Stack direction="row" spacing={1} justifyContent="center" sx={{ mt: 2 }}>
             <Button
-              variant={passed ? "contained" : "outlined"}  // 기본 흰색 → 통과시 파란색
+              variant={passed ? "contained" : "outlined"}
               color="primary"
               onClick={(e) => { e.stopPropagation(); onGood?.(); }}
               startIcon={passed ? <span>✓</span> : null}
