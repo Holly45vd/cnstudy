@@ -2,9 +2,10 @@
 import React, { useEffect, useState } from "react";
 import { listUnits } from "../../firebase/firestore";
 import { Link as RouterLink } from "react-router-dom";
-
+import { useNavigate } from "react-router-dom"; 
 /* MUI */
 import {
+  Button,
   List,
   ListItem,
   ListItemText,
@@ -21,7 +22,7 @@ export default function UnitListPage() {
   const [units, setUnits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState(null);
-
+const navigate = useNavigate(); 
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -49,6 +50,13 @@ export default function UnitListPage() {
     <Stack spacing={2}>
       <Typography variant="h5" fontWeight={700}>
         유닛 목록
+    
+    <Button
+      onClick={() => navigate("/pronunciation")}
+    >
+      병음 발음하기
+    </Button>
+
       </Typography>
 
       {err && <Alert severity="error">초기 로드 에러: {err}</Alert>}

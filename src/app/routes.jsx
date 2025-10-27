@@ -12,6 +12,7 @@ import SubstitutionSection from "../pages/units/sections/SubstitutionSection";
 import ConversationSection from "../pages/units/sections/ConversationSection";
 import PracticeSection from "../pages/units/sections/PracticeSection";
 import EverydayPage from "../pages/everyday/EverydayPage";
+import PronunciationPage from "../pages/pronunciation/PronunciationPage";
 
 /* Grammar (전체 문법 한 줄) */
 import GrammarLine from "../pages/grammar/GrammarLine";
@@ -53,7 +54,7 @@ export const router = createBrowserRouter(
 
         /* ✅ 새 문법 전체 페이지 (네브바용) */
         { path: "grammar", element: <GrammarLine /> },
-
+        { path: "pronunciation", element: <PronunciationPage /> }, 
         { path: "everyday/:date?", element: <EverydayPage /> },
         { path: "flashcards", element: <FlashcardsPage /> },
         { path: "flashcards/:unitId", element: <FlashcardsPage /> },
