@@ -13,6 +13,13 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.wdxl-lubrifont-sc-regular {
+  font-family: "WDXL Lubrifont SC", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+
 /* ---- 상황별 선택 폰트 ---- */
 /* 큼지막한 타이틀에 좋은 둥근 제목체 */
 .font-orbit { font-family: "Orbit", sans-serif; }
