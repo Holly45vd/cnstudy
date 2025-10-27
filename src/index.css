@@ -1,25 +1,33 @@
 /* ===== 기본 리셋 & 레이아웃 ===== */
-html, body, #root { height: 100%; }
-body { margin: 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-
-/* ===== 전역 기본 폰트 (중국어 중심 UI) =====
- * - 1순위: Noto Sans SC (Google Fonts CSS 지원)
- * - 2순위: WDXL Lubrifont SC (Static/직접 호스팅 필요)
- * - 3순위: ZCOOL KuaiLe (개성체, 보조)
- */
+html, body, #root {
+  height: 100%;
+}
 body {
-  font-family: "Noto Sans SC", "WDXL Lubrifont SC", "ZCOOL KuaiLe", sans-serif;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== 전역 기본 폰트 (Lubrifont SC 강제 적용) ===== */
+body {
+  font-family: "WDXL Lubrifont SC", sans-serif !important;
   text-rendering: optimizeLegibility;
+  font-weight: 400;
 }
 
 /* ===== 중국어 텍스트 전용 유틸 ===== */
-.font-zh {
-  font-family: "WDXL Lubrifont SC", "ZCOOL KuaiLe", "Noto Sans SC", sans-serif;
+.font-zh,
+.hanzi-large,
+.meaning-large,
+.MuiTypography-root,
+.MuiButton-root,
+.MuiChip-root,
+.MuiInputBase-root {
+  font-family: "WDXL Lubrifont SC", sans-serif !important;
 }
 
 /* 큰 한자 표기(카드 앞면 등) */
 .hanzi-large {
-  font-family: "WDXL Lubrifont SC", "ZCOOL KuaiLe", "Noto Sans SC", sans-serif;
   font-size: clamp(48px, 7vw, 72px);
   line-height: 1.05;
   font-weight: 900;
@@ -31,9 +39,3 @@ body {
   line-height: 1.15;
   font-weight: 900;
 }
-
-/* MUI 컴포넌트도 상위 폰트 상속 */
-.MuiButton-root,
-.MuiChip-root,
-.MuiInputBase-root,
-.MuiTypography-root { font-family: inherit; }
