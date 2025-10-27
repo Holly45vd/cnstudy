@@ -1,12 +1,14 @@
 // src/pages/card/FlashcardsPage.jsx
-import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import {
   Container, Stack, Typography, LinearProgress, Alert, Button,
-  ToggleButton, ToggleButtonGroup, FormControlLabel, Switch, TextField, Autocomplete
+  ToggleButton, ToggleButtonGroup, FormControlLabel, Switch, TextField, Autocomplete, Paper
 } from "@mui/material";
 import FlashcardCard from "../../components/FlashcardCard";
-import { listUnits, getUnit, getWordsByIds } from "../../firebase/firestore";
+import { listUnits, getUnit, getWordsByIds, getPassedSet, markPassed } from "../../firebase/firestore";
 import { useParams, useNavigate } from "react-router-dom";
+import { freeTextPinyinToKorean } from "../../lib/pinyinKorean";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 /* 시드 지원 Fisher–Yates */
 function shuffle(arr, seed = Date.now()) {
@@ -20,75 +22,122 @@ function shuffle(arr, seed = Date.now()) {
   return a;
 }
 
-/** koPron 자동 주입(발음 필드 보정) */
+/** koPron/예문 발음 자동 보정 */
 function normalizeKoPron(word) {
-  if (word?.koPron || word?.koPronunciation || word?.pronunciation_ko) return word;
-  let koPron = "";
-  if (Array.isArray(word?.pronunciation) && word.pronunciation.length) {
-    const zh = word?.zh ?? word?.hanzi ?? word?.id;
-    const exact = word.pronunciation.find((p) => p?.label === zh && p?.ko);
-    koPron = exact?.ko || word.pronunciation[0]?.ko || "";
+  if (!word || typeof word !== "object") return word;
+  const zh = word.zh ?? word.hanzi ?? word.id ?? "";
+  let koPron =
+    word.koPron ||
+    word.koPronunciation ||
+    word.pronunciation_ko ||
+    (() => {
+      if (Array.isArray(word.pronunciation) && word.pronunciation.length) {
+        const exact = word.pronunciation.find((p) => p?.label === zh && p?.ko);
+        return exact?.ko || word.pronunciation[0]?.ko || "";
+      }
+      return "";
+    })();
+  if (!koPron && word.pinyin) {
+    try {
+      const pin = Array.isArray(word.pinyin) ? word.pinyin.join(" ") : String(word.pinyin);
+      koPron = freeTextPinyinToKorean(pin);
+    } catch {}
   }
-  if (!koPron) return word;
-  return { ...word, koPron };
+  let sentenceKo = word.sentenceKo;
+  if (!sentenceKo && word.sentencePinyin) {
+    try {
+      const sp = Array.isArray(word.sentencePinyin) ? word.sentencePinyin.join(" ") : String(word.sentencePinyin);
+      sentenceKo = freeTextPinyinToKorean(sp);
+    } catch {}
+  }
+  if (!koPron && !sentenceKo) return word;
+  return {
+    ...word,
+    ...(koPron ? { koPron, pronunciation_ko: koPron } : {}),
+    ...(sentenceKo ? { sentenceKo } : {}),
+  };
 }
 
 export default function FlashcardsPage() {
   const { unitId: unitIdParam } = useParams();
   const navigate = useNavigate();
 
+  const [user, setUser] = useState(null);
   const [units, setUnits] = useState([]);
   const [unitId, setUnitId] = useState(unitIdParam || "");
   const [wordsAll, setWordsAll] = useState([]);
   const [onlyWithSentence, setOnlyWithSentence] = useState(false);
-  const [order, setOrder] = useState("shuffled"); // shuffled | original
-  const [queue, setQueue] = useState([]); // 학습 큐(인덱스 배열)
+  const [order, setOrder] = useState("shuffled");
+  const [queue, setQueue] = useState([]);
   const [idx, setIdx] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [loading, setLoading] = useState(false);
-  const seedRef = useRef(Date.now());
+  const [seed, setSeed] = useState(Date.now());
+  const [passedIds, setPassedIds] = useState(() => new Set());
 
-  // 1) 유닛 목록
+  // 로그인 상태
+  useEffect(() => {
+    const auth = getAuth();
+    return onAuthStateChanged(auth, (u) => setUser(u || null));
+  }, []);
+
+  // 유닛 목록
   useEffect(() => {
     (async () => {
       try {
         const u = await listUnits({ max: 500 });
-        setUnits(u);
+        setUnits(Array.isArray(u) ? u : []);
       } catch (e) {
         console.error(e);
       }
     })();
   }, []);
 
-  // 2) 유닛 변경 시 로드
+  // 유닛 변경 시 단어 + 통과 이력 로드
   useEffect(() => {
-    if (!unitId) return;
     (async () => {
+      if (!unitId) return;
       setLoading(true);
       setFlipped(false);
       try {
         const u = await getUnit(String(unitId));
         const ids = Array.isArray(u?.vocabIds) ? u.vocabIds.map(String) : [];
         const raw = await getWordsByIds(ids);
-        // koPron 보정
-        const words = raw.map(normalizeKoPron);
-        setWordsAll(words);
+        setWordsAll(raw.map(normalizeKoPron));
+
+        // 통과 이력
+        let passed = new Set();
+        if (user?.uid) {
+          try {
+            passed = await getPassedSet(user.uid, String(unitId));
+          } catch (e) {
+            console.warn("getPassedSet 실패, localStorage 사용", e);
+          }
+        }
+        if (!user?.uid) {
+          const key = `progress:${unitId}`;
+          try {
+            const arr = JSON.parse(localStorage.getItem(key) || "[]");
+            passed = new Set(arr.map(String));
+          } catch {}
+        }
+        setPassedIds(passed);
       } catch (e) {
         console.error(e);
       } finally {
         setLoading(false);
       }
     })();
-  }, [unitId]);
+  }, [unitId, user?.uid]);
 
-  // 3) 필터 + 정렬 → 큐 갱신
+  // 필터 + 정렬 → 큐 갱신
   const words = useMemo(() => {
     const base = onlyWithSentence
       ? wordsAll.filter(w => (w?.sentence || w?.sentenceKo || w?.sentencePinyin))
       : wordsAll.slice();
     if (order === "original") return base;
-    return shuffle(base, seedRef.current);
-  }, [wordsAll, onlyWithSentence, order]);
+    return shuffle(base, seed);
+  }, [wordsAll, onlyWithSentence, order, seed]);
 
   useEffect(() => {
     setQueue(words.map((_, i) => i));
@@ -96,8 +145,8 @@ export default function FlashcardsPage() {
     setFlipped(false);
   }, [words]);
 
-  const progress = words.length ? (idx / words.length) * 100 : 0;
-  const current = words[queue[idx]];
+  const current = words.length ? words[queue[idx]] : null;
+  const currentKey = current ? String(current.id ?? current.zh ?? current.hanzi ?? queue[idx]) : "";
 
   const flip = useCallback(() => setFlipped(f => !f), []);
   const next = useCallback(() => {
@@ -109,37 +158,36 @@ export default function FlashcardsPage() {
     setIdx(i => Math.max(i - 1, 0));
   }, []);
 
-  // Again: 현재 카드를 몇 장 뒤에 재삽입
-  const again = useCallback(() => {
-    if (!words.length) return;
-    setQueue(q => {
-      const cur = q[idx];
-      const rest = q.filter((_, i) => i !== idx);
-      const offset = Math.min(4, Math.max(2, Math.floor(words.length * 0.15)));
-      const insertAt = Math.min(idx + offset, rest.length);
-      const newQ = rest.slice(0, insertAt).concat([cur], rest.slice(insertAt));
-      return newQ;
+  // Good: 통과 기록 + 영속화 + 다음
+  const good = useCallback(async () => {
+    if (!currentKey) return;
+    setPassedIds(prev => {
+      const n = new Set(prev);
+      n.add(currentKey);
+      return n;
     });
+    try {
+      if (user?.uid) {
+        await markPassed(user.uid, String(unitId), String(currentKey));
+      } else {
+        const key = `progress:${unitId}`;
+        const arr = Array.from(new Set([...(JSON.parse(localStorage.getItem(key) || "[]")), String(currentKey)]));
+        localStorage.setItem(key, JSON.stringify(arr));
+      }
+    } catch (e) {
+      console.error("통과 저장 실패", e);
+    }
     next();
-  }, [idx, next, words.length]);
+  }, [currentKey, next, unitId, user?.uid]);
 
-  const good = useCallback(() => next(), [next]);
-
-  // 키보드
-  useEffect(() => {
-    const onKey = (e) => {
-      if (e.code === "Space") { e.preventDefault(); flip(); }
-      else if (e.key === "ArrowRight") next();
-      else if (e.key === "ArrowLeft") prev();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [flip, next, prev]);
-
-  // URL 동기화(선택 시 이동)
+  // URL 동기화
   useEffect(() => {
     if (unitIdParam !== unitId && unitId) navigate(`/flashcards/${unitId}`, { replace: true });
   }, [unitId, unitIdParam, navigate]);
+
+  // 진행 퍼센트: "통과(Set.size) / 총 단어"
+  const goodCount = passedIds.size;
+  const progressPercent = words.length ? (goodCount / words.length) * 100 : 0;
 
   return (
     <Container maxWidth="md" sx={{ py: 3 }}>
@@ -155,6 +203,19 @@ export default function FlashcardsPage() {
           renderInput={(params) => <TextField {...params} label="Unit 선택" placeholder="예: 1, 2, 3..." />}
           disableClearable
         />
+
+        {/* ← 요청: 진행바를 유닛 선택 '바로 아래'로 이동 */}
+        <Paper variant="outlined" sx={{ p: 2 }}>
+          <Stack spacing={1}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center">
+              <Typography variant="subtitle2" fontWeight={700}>오늘의 학습 진행</Typography>
+              <Typography variant="caption" color="text.secondary">
+                통과 {goodCount} · 총 {words.length}
+              </Typography>
+            </Stack>
+            <LinearProgress variant="determinate" value={progressPercent} />
+          </Stack>
+        </Paper>
 
         {/* 옵션 */}
         <Stack direction="row" spacing={2} alignItems="center">
@@ -176,43 +237,31 @@ export default function FlashcardsPage() {
             }
             label="예문 있는 것만"
           />
-          <Button
-            onClick={() => (seedRef.current = Date.now() || ((Math.random() * 1e9) | 0))}
-            onMouseUp={() => setOrder(o => (o === "shuffled" ? "shuffled" : o))} // 시드 갱신 후 재셔플 유도
-          >
-            씨드 갱신(다시 섞기)
-          </Button>
+          <Button onClick={() => setSeed(Date.now())}>씨드 갱신(다시 섞기)</Button>
         </Stack>
 
         {loading && <LinearProgress />}
 
         {/* 카드 */}
-        {words.length === 0 && !loading && (
+        {(!words.length || !current) && !loading && (
           <Alert severity="info">표시할 단어가 없습니다. 유닛을 선택하거나 필터를 확인하세요.</Alert>
         )}
 
-        {words.length > 0 && (
+        {words.length > 0 && current && (
           <>
-            <FlashcardCard word={current} flipped={flipped} onFlip={flip} />
+            <FlashcardCard
+              word={current}
+              flipped={flipped}
+              onFlip={flip}
+              onGood={good}
+              passed={passedIds.has(currentKey)}
+            />
 
-            {/* 컨트롤 */}
+            {/* 이동 컨트롤 */}
             <Stack direction="row" spacing={1} justifyContent="center">
               <Button variant="outlined" onClick={prev} disabled={idx === 0}>이전(←)</Button>
               <Button variant="contained" onClick={flip}>뒤집기(Space)</Button>
               <Button variant="outlined" onClick={next} disabled={idx >= words.length - 1}>다음(→)</Button>
-            </Stack>
-
-            <Stack direction="row" spacing={1} justifyContent="center">
-              <Button onClick={again}>Again(다시)</Button>
-              <Button onClick={good}>Good(통과)</Button>
-            </Stack>
-
-            {/* 진행률 */}
-            <Stack spacing={0.5}>
-              <LinearProgress variant="determinate" value={progress} />
-              <Typography variant="caption" align="center">
-                {idx + 1} / {words.length}
-              </Typography>
             </Stack>
           </>
         )}

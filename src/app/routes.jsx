@@ -16,6 +16,7 @@ import PracticeSection from "../pages/units/sections/PracticeSection";
 import PronunciationPage from "../pages/pronunciation/PronunciationPage";
 import EverydayPage from "../pages/everyday/EverydayPage";
 
+/* Admin */
 import AdminHome from "../admin/AdminHome";
 import WordsAdmin from "../admin/WordsAdmin";
 import UnitsAdmin from "../admin/UnitsAdmin";
@@ -24,9 +25,17 @@ import DailiesAdmin from "../admin/DailiesAdmin";
 /* Flashcards */
 import FlashcardsPage from "../pages/card/FlashcardsPage";
 
-/**
- * GitHub Pages 배포용: basename 반드시 "/cnstudy"
+/** ===== basename 자동 분기 =====
+ * - Vite(dev): import.meta.env.BASE_URL === "/"
+ * - Vite(build): vite.config.base 값 주입(예: "/cnstudy/")
+ * - CRA(build): process.env.PUBLIC_URL === "/cnstudy"
  */
+const fromVite =
+  typeof import.meta !== "undefined" ? import.meta.env?.BASE_URL : "";
+const fromCRA =
+  typeof process !== "undefined" ? process.env.PUBLIC_URL || "" : "";
+const BASENAME = (fromVite || fromCRA || "/").replace(/\/+$/, "/");
+
 export const router = createBrowserRouter(
   [
     {
@@ -51,9 +60,8 @@ export const router = createBrowserRouter(
         { path: "pronunciation", element: <PronunciationPage /> },
         { path: "everyday/:date?", element: <EverydayPage /> },
 
-        /* Flashcards route 추가 */
-{ path: "flashcards", element: <FlashcardsPage /> },
-{ path: "flashcards/:unitId", element: <FlashcardsPage /> },
+        { path: "flashcards", element: <FlashcardsPage /> },
+        { path: "flashcards/:unitId", element: <FlashcardsPage /> },
 
         {
           path: "admin",
@@ -65,10 +73,10 @@ export const router = createBrowserRouter(
           ],
         },
 
-        // 404 fallback: 루트로
+        // 404 fallback
         { path: "*", element: <UnitListPage /> },
       ],
     },
   ],
-  { basename: "/cnstudy" }
+  { basename: BASENAME }
 );

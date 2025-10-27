@@ -1,3 +1,4 @@
+// src/components/FlashcardCard.jsx
 import React, { useMemo } from "react";
 import {
   Card, CardContent, Typography, Stack, IconButton, Chip, Box, Divider, Button
@@ -5,7 +6,6 @@ import {
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import TranslateIcon from "@mui/icons-material/Translate";
 
-// ⬇️ 추가
 import { freeTextPinyinToKorean } from "../lib/pinyinKorean";
 import { speakSafe } from "../lib/ttsHelper";
 
@@ -32,50 +32,89 @@ function useNormalizedWord(raw) {
   }, [raw]);
 }
 
-export default function FlashcardCard({ word, flipped, onFlip }) {
+export default function FlashcardCard({ word, flipped, onFlip, onGood, passed }) {
   const { zh, pinyin, ko, koPron, pos, tags, sentence, sentencePinyin, sentenceKo } =
     useNormalizedWord(word);
 
-  // ⬇️ 추가: 재생 핸들러
+  const displayKoPron = useMemo(() => {
+    if (koPron && String(koPron).trim()) return koPron;
+    if (pinyin && String(pinyin).trim()) {
+      try { return freeTextPinyinToKorean(String(pinyin)); } catch {}
+    }
+    return "";
+  }, [koPron, pinyin]);
+
   const playChinese = async (text) => {
     if (!text?.trim()) return;
     await speakSafe(text, { lang: "zh-CN", rate: 1.0 });
   };
-
   const playPinyin = async (py) => {
     if (!py?.trim()) return;
-    const kor = freeTextPinyinToKorean(py);      // 띄어쓰기/구두점 유지한 한국어 표기로 변환
+    const kor = freeTextPinyinToKorean(py);
     if (!kor) return;
     await speakSafe(kor, { lang: "ko-KR", rate: 1.0 });
   };
 
+  // 앞/뒤 스타일: 앞면은 기본 배경(파란 그라데이션 제거), 뒷면만 약간 톤
+  const faceStyles = !flipped
+    ? { bg: "transparent", border: "1px solid rgba(0,0,0,0.08)" } // 앞면: 기본
+    : { bg: "linear-gradient(180deg, #FFF3E7 0%, #FFE6CF 100%)", border: "1px solid #F6CDA0" }; // 뒷면만 컬러
+
   return (
     <Card
       onClick={onFlip}
-      elevation={3}
+      elevation={4}
       sx={{
-        borderRadius: 3,
+        position: "relative",
+        borderRadius: 4,
         p: 2,
         mb: 2,
         cursor: "pointer",
         userSelect: "none",
         transition: "transform 0.2s ease, box-shadow 0.2s ease",
-        "&:hover": { transform: "translateY(-2px)", boxShadow: 6 },
-        minHeight: 280,
+        "&:hover": { transform: "translateY(-2px)", boxShadow: 8 },
+        minHeight: 360,
         display: "flex",
-        alignItems: "center",
+        alignItems: "stretch",
         justifyContent: "center",
         textAlign: "center",
+        background: faceStyles.bg,
+        border: faceStyles.border,
       }}
     >
+      {/* 통과 스티커 */}
+      {passed && (
+        <Box
+          onClick={(e) => e.stopPropagation()}
+          sx={{
+            position: "absolute",
+            right: 16,
+            transform: "rotate(-12deg)",
+            px: 1.25,
+            py: 0.5,
+            borderRadius: 1.1,
+            fontWeight: 900,
+            fontSize: 12,
+            letterSpacing: 1,
+            bgcolor: "#1976d2", // MUI primary 기본
+            color: "white",
+            boxShadow: "0 4px 12px rgba(25,118,210,0.35)",
+          }}
+        >
+          통과됨 ✓
+        </Box>
+      )}
+
       {!flipped ? (
-        <CardContent sx={{ width: "100%" }}>
-          <Stack spacing={1.25} alignItems="center">
+        <CardContent sx={{ width: "100%", display: "flex", flexDirection: "column" }}>
+          <Stack spacing={1.25} alignItems="center" sx={{ flex: 1 }}>
             <Stack direction="row" alignItems="center" spacing={1}>
-              <Typography variant="h3" sx={{ fontWeight: 900, letterSpacing: 1 }}>
+              {/* 한자 크게 */}
+              <Typography
+                sx={{ fontWeight: 900, letterSpacing: 0.5, lineHeight: 1.05, fontSize: { xs: 48, sm: 64, md: 72 } }}
+              >
                 {zh}
               </Typography>
-              {/* 중국어(한자) 재생 */}
               <IconButton
                 size="large"
                 color="primary"
@@ -86,21 +125,10 @@ export default function FlashcardCard({ word, flipped, onFlip }) {
               </IconButton>
             </Stack>
 
-            <Typography variant="h6" color="text.secondary">
-              {pinyin}{koPron ? `  ${koPron}` : ""}
+            {/* 병음/한글발음 작게 */}
+            <Typography sx={{ color: "text.secondary", fontSize: { xs: 14, sm: 15 }, mt: 0.5 }}>
+              {pinyin}{displayKoPron ? `  ${displayKoPron}` : ""}
             </Typography>
-
-            {/* 병음(TTS: 한국어 음성으로 변환된 표기 읽기) */}
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<TranslateIcon />}
-              onClick={(e) => { e.stopPropagation(); playPinyin(pinyin); }}
-              disabled={!pinyin}
-              aria-label="병음 읽기(한글표기로 TTS)"
-            >
-              병음 ▶
-            </Button>
 
             {(pos || (tags && tags.length)) && (
               <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
@@ -111,15 +139,27 @@ export default function FlashcardCard({ word, flipped, onFlip }) {
               </Stack>
             )}
 
-            <Typography variant="body2" sx={{ mt: 1 }}>
-              (카드 클릭: 뜻 보기)
-            </Typography>
+          </Stack>
+
+          {/* 카드 내부 하단 컨트롤: 통과 버튼만 */}
+          <Stack direction="row" spacing={1} justifyContent="center" sx={{ mt: 2 }}>
+            <Button
+              variant={passed ? "contained" : "outlined"}  // 기본 흰색 → 통과시 파란색
+              color="primary"
+              onClick={(e) => { e.stopPropagation(); onGood?.(); }}
+              startIcon={passed ? <span>✓</span> : null}
+            >
+              {passed ? "통과됨" : "Good(통과)"}
+            </Button>
           </Stack>
         </CardContent>
       ) : (
-        <CardContent sx={{ width: "100%" }}>
-          <Stack spacing={1.25} alignItems="center">
-            <Typography variant="h5" sx={{ fontWeight: 800 }}>
+        <CardContent sx={{ width: "100%", display: "flex", flexDirection: "column" }}>
+          <Stack spacing={1.25} alignItems="center" sx={{ flex: 1 }}>
+            {/* 뜻 크게 */}
+            <Typography
+              sx={{ fontWeight: 900, lineHeight: 1.15, fontSize: { xs: 28, sm: 32, md: 36 } }}
+            >
               {ko}
             </Typography>
 
@@ -128,10 +168,11 @@ export default function FlashcardCard({ word, flipped, onFlip }) {
                 sx={{
                   width: "100%",
                   maxWidth: 680,
-                  bgcolor: "#f9fafb",
+                  bgcolor: "rgba(255,255,255,0.72)",
                   p: 2,
                   borderRadius: 2,
                   textAlign: "left",
+                  border: "1px solid rgba(0,0,0,0.05)"
                 }}
                 onClick={(e) => e.stopPropagation()}
               >
@@ -158,14 +199,6 @@ export default function FlashcardCard({ word, flipped, onFlip }) {
                     <Typography variant="body2" color="text.secondary">
                       {sentencePinyin}
                     </Typography>
-                    <Button
-                      size="small"
-                      variant="text"
-                      startIcon={<TranslateIcon />}
-                      onClick={() => playPinyin(sentencePinyin)}
-                    >
-                      병음 ▶
-                    </Button>
                   </Stack>
                 )}
 
@@ -177,9 +210,19 @@ export default function FlashcardCard({ word, flipped, onFlip }) {
               </Box>
             )}
 
-            <Typography variant="body2" color="text.secondary">
-              (카드 클릭: 앞면으로)
-            </Typography>
+
+          </Stack>
+
+          {/* 카드 내부 하단 컨트롤: 통과 버튼만 */}
+          <Stack direction="row" spacing={1} justifyContent="center" sx={{ mt: 2 }}>
+            <Button
+              variant={passed ? "contained" : "outlined"}  // 기본 흰색 → 통과시 파란색
+              color="primary"
+              onClick={(e) => { e.stopPropagation(); onGood?.(); }}
+              startIcon={passed ? <span>✓</span> : null}
+            >
+              {passed ? "통과됨" : "Good(통과)"}
+            </Button>
           </Stack>
         </CardContent>
       )}

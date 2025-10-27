@@ -2,7 +2,7 @@
 import { db } from "./config";
 import {
   collection, doc, getDoc, getDocs, setDoc, updateDoc, serverTimestamp,
-  query, where, documentId, orderBy, limit
+ query, where, documentId, orderBy, limit, arrayUnion
 } from "firebase/firestore";
 
 /* ------------------------ 공통 유틸 ------------------------ */
@@ -128,4 +128,29 @@ export async function setDailyWords(date, wordIds) {
   };
   await setDoc(doc(db, "dailies", date), payload, { merge: true });
   return date;
+}
+
+/* ------------------------ progress (user progress) ------------------------ */
+// 통과 목록 읽기: users/{uid}/progress/{unitId} → { passedIds: string[] }
+export async function getPassedSet(uid, unitId) {
+  if (!uid || !unitId) return new Set();
+  const ref = doc(db, "users", String(uid), "progress", String(unitId));
+  const snap = await getDoc(ref);
+  const arr = snap.exists() ? (snap.data()?.passedIds || []) : [];
+  return new Set(arr.map(String));
+}
+
+// 통과 추가: 중복 없이 arrayUnion
+export async function markPassed(uid, unitId, wordId) {
+  if (!uid || !unitId || !wordId) return;
+  const ref = doc(db, "users", String(uid), "progress", String(unitId));
+  await setDoc(
+    ref,
+    {
+      unitId: String(unitId),
+      passedIds: arrayUnion(String(wordId)),
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
 }
