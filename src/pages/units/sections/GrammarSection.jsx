@@ -51,30 +51,49 @@ function Highlight({ text, query }) {
   );
 }
 
-// 데이터 스키마 혼용 대응 정규화
+/** 문자열/객체 혼용 안전 정규화
+ * - "제목: 설명" 형태 문자열 → {title, summary}
+ * - "제목만" 문자열 → {title}
+ * - 객체 키 다양성 대응(rule/description/desc/example/examples/notes 등)
+ */
 function normalizeGrammarArray(raw) {
   const arr = Array.isArray(raw) ? raw : raw ? Object.values(raw) : [];
   return arr.map((it) => {
-    const title = it.title || it.rule || "";
-    const summary = it.summary ?? it.description ?? it.desc ?? "";
-    const notes = Array.isArray(it.notes) ? it.notes : it.notes ? [String(it.notes)] : [];
+    // 1) 문자열 처리
+    if (typeof it === "string") {
+      const idx = it.indexOf(":");
+      if (idx >= 0) {
+        const title = it.slice(0, idx).trim();
+        const summary = it.slice(idx + 1).trim();
+        return { title, summary, notes: [], examples: [] };
+      }
+      // "제목"만 있는 경우
+      return { title: it.trim(), summary: "", notes: [], examples: [] };
+    }
+
+    // 2) 객체 처리
+    const title = it.title || it.rule || it.name || it.header || "";
+    const summary = it.summary ?? it.description ?? it.desc ?? it.note ?? "";
+
+    // notes(문자열/배열 모두 지원)
+    const notes =
+      Array.isArray(it.notes) ? it.notes :
+      it.notes ? [String(it.notes)] :
+      [];
+
+    // examples: 배열 또는 단일 example
+    const mapEx = (ex) => ({
+      chinese: ex.chinese || ex.zh || "",
+      pinyin: ex.pinyin || ex.py || "",
+      pronunciation: ex.pronunciation || ex.pron || "",
+      meaning: ex.meaning || ex.ko || "",
+    });
     const examples = Array.isArray(it.examples)
-      ? it.examples.map((ex) => ({
-          chinese: ex.chinese || ex.zh || "",
-          pinyin: ex.pinyin || ex.py || "",
-          pronunciation: ex.pronunciation || ex.pron || "",
-          meaning: ex.meaning || ex.ko || "",
-        }))
+      ? it.examples.map(mapEx)
       : it.example
-      ? [
-          {
-            chinese: it.example.chinese || it.example.zh || "",
-            pinyin: it.example.pinyin || it.example.py || "",
-            pronunciation: it.example.pronunciation || it.example.pron || "",
-            meaning: it.example.meaning || it.example.ko || "",
-          },
-        ]
+      ? [mapEx(it.example)]
       : [];
+
     return { title, summary, notes, examples };
   });
 }
@@ -280,7 +299,7 @@ export default function GrammarSection() {
             <Card sx={{ borderRadius: 2 }} variant="outlined">
               <CardContent>
                 {item.summary && (
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, whiteSpace: "pre-line" }}>
                     <Highlight text={item.summary} query={debouncedQuery} />
                   </Typography>
                 )}
@@ -348,7 +367,7 @@ export default function GrammarSection() {
                         </Box>
 
                         {/* 보조 줄 */}
-                        {show.pinyin && (
+                        {show.pinyin && (ex.pinyin || ex.pronunciation) && (
                           <Typography variant="body2" sx={{ mt: 0.5 }}>
                             <strong>Pinyin:</strong>{" "}
                             <Highlight text={ex.pinyin} query={debouncedQuery} />
@@ -366,7 +385,7 @@ export default function GrammarSection() {
                           </Typography>
                         )}
 
-                        {show.meaning && (
+                        {show.meaning && ex.meaning && (
                           <Typography variant="body2" color="text.secondary">
                             <strong>뜻:</strong>{" "}
                             <Highlight text={ex.meaning} query={debouncedQuery} />
