@@ -72,7 +72,7 @@ export default function ConversationSection() {
     <Stack spacing={1.5}>
       {conv.map((c, i) => (
         <Paper key={i} variant="outlined" sx={{ p: 2, display: "flex", gap: 2, alignItems: "flex-start" }}>
-          <Chip label={c.speaker || "A"} size="small" sx={{ minWidth: 32, textAlign: "center", fontWeight: 700 }} />
+          <Chip label={c.speaker || "A"} size="small" sx={{ minWidth: 32, textAlign: "center" }} />
           <Stack sx={{ flex: 1 }}>
             <Typography variant="h6">{c.chinese}</Typography>
             <Typography variant="body2" color="text.secondary">

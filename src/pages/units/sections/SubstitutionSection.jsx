@@ -534,7 +534,7 @@ export default function SubstitutionSection() {
                     <Typography
                       sx={{
                         lineHeight: 1.25,
-                        fontWeight: 400, // 볼드 제거
+          
                         fontSize: "clamp(18px, 3.6vw, 26px)", // 한자 크기 축소
                         letterSpacing: 0,
                       }}
@@ -566,7 +566,7 @@ export default function SubstitutionSection() {
                   {show.pinyin && !!py && (
                     <Typography
                       variant="body2"
-                      sx={{ lineHeight: 1.7, fontWeight: 400 }}
+                      sx={{ lineHeight: 1.7}}
                     >
                       {py}
                     </Typography>

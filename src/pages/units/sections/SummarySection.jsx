@@ -29,7 +29,7 @@ export default function SummarySection() {
       {/* 핵심 어휘 */}
       {vocab.length > 0 && (
         <Box>
-          <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
+          <Typography variant="subtitle1" sx={{ mb: 1 }}>
             핵심 어휘
           </Typography>
           <Stack spacing={1}>
@@ -57,7 +57,7 @@ export default function SummarySection() {
       {/* 핵심 문법 */}
       {grammar.length > 0 && (
         <Box>
-          <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
+          <Typography variant="subtitle1" sx={{ mb: 1 }}>
             핵심 문법
           </Typography>
           <Stack spacing={1}>

@@ -29,7 +29,7 @@ export default function GrammarTab({ unitId }) {
 
   return (
     <Stack spacing={2} sx={{ p: 2 }}>
-      <Typography variant="h6" sx={{ fontWeight: 700 }}>
+      <Typography variant="h6" >
         📘 문법 요약
       </Typography>
 
@@ -45,3 +45,4 @@ export default function GrammarTab({ unitId }) {
     </Stack>
   );
 }
+

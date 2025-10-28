@@ -167,7 +167,7 @@ function GrammarItem({ item }) {
 
     return (
       <Box sx={{ mb: 1 }}>
-        {term && <Typography variant="body2" sx={{ fontWeight: 600 }}>{term}</Typography>}
+        {term && <Typography variant="body2">{term}</Typography>}
         {desc && (
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
             {desc}
@@ -241,7 +241,7 @@ export default function WordDetailModal({ open, onClose, word }) {
         {/* 헤더: 한자 / 병음 / 뜻 */}
         <Stack spacing={1.2}>
           <Stack direction="row" alignItems="center" spacing={1}>
-            <Typography sx={{ fontSize: "clamp(24px, 4.2vw, 36px)", fontWeight: 600 }}>
+            <Typography sx={{ fontSize: "clamp(24px, 4.2vw, 36px)" }}>
               {zh}
             </Typography>
             <IconButton color="primary" onClick={() => speakZh(zh)} aria-label="중국어 발음 듣기">

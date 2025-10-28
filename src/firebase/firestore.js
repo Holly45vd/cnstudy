@@ -154,3 +154,52 @@ export async function markPassed(uid, unitId, wordId) {
     { merge: true }
   );
 }
+
+// ===== 데일리(dailies) 최근 구간 조회 =====
+// - 권장: date 필드(yyyy-mm-dd) 인덱스 필요: Collection 'dailies' 에서 'date'로 orderBy/where
+// - 인덱스 문제나 필드 미존재 시, 문서ID(yyyy-mm-dd) 직접 조회로 폴백
+export async function listDailiesInRange({ startDate, endDate, limit: lim = 7 }) {
+  const col = collection(db, "dailies");
+
+  // 1) 정석: date 필드로 범위 쿼리 (권장)
+  try {
+    const q = query(
+      col,
+      where("date", ">=", startDate),
+      where("date", "<=", endDate),
+      orderBy("date", "desc"),
+      limit(lim)
+    );
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    }
+  } catch (e) {
+    // 인덱스 미설정/필드 미존재 등 → 폴백으로 이동
+    console.warn("[listDailiesInRange] range query failed, fallback to ID reads:", e?.message || e);
+  }
+
+  // 2) 폴백: 날짜 문자열을 역순으로 생성해서 문서ID로 직접 get
+  const days = [];
+  const end = new Date(endDate);
+  const cur = new Date(end);
+  for (let i = 0; i < lim; i++) {
+    const y = cur.getFullYear();
+    const m = String(cur.getMonth() + 1).padStart(2, "0");
+    const d = String(cur.getDate()).padStart(2, "0");
+    days.push(`${y}-${m}-${d}`);
+    cur.setDate(cur.getDate() - 1);
+  }
+
+  const results = [];
+  for (const id of days) {
+    try {
+      const ref = doc(col, id);
+      const snap = await getDoc(ref);
+      if (snap.exists()) results.push({ id: snap.id, ...snap.data() });
+    } catch (e) {
+      // ignore this day
+    }
+  }
+  return results;
+}

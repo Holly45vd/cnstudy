@@ -39,7 +39,7 @@ function Highlight({ text, query }) {
         p.toLowerCase() === query.toLowerCase() ? (
           <mark
             key={i}
-            style={{ padding: 0, backgroundColor: "transparent", color: "#1976d2", fontWeight: 700 }}
+            style={{ padding: 0, backgroundColor: "transparent", color: "#1976d2" }}
           >
             {p}
           </mark>

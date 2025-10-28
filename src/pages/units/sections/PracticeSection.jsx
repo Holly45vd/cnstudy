@@ -300,7 +300,7 @@ export default function PracticeSection() {
 
   return (
     <Box p={2}>
-      <Typography variant="h5" fontWeight="bold" gutterBottom>
+      <Typography variant="h5" gutterBottom>
         연습 문제
       </Typography>
 

@@ -92,7 +92,7 @@ export default function FlashcardCard({ word, flipped, onFlip, onGood, passed })
             px: 1.25,
             py: 0.5,
             borderRadius: 1.1,
-            fontWeight: 900,
+            
             fontSize: 12,
             letterSpacing: 1,
             bgcolor: "#1976d2",
@@ -111,7 +111,7 @@ export default function FlashcardCard({ word, flipped, onFlip, onGood, passed })
             <Stack direction="row" alignItems="center" spacing={1}>
               {/* 한자 */}
               <Typography
-                sx={{ fontWeight: 900, letterSpacing: 0.5, lineHeight: 1.05, fontSize: { xs: 48, sm: 64, md: 72 } }}
+                sx={{  letterSpacing: 0.5, lineHeight: 1.05, fontSize: { xs: 48, sm: 64, md: 72 } }}
               >
                 {zh}
               </Typography>
@@ -158,7 +158,7 @@ export default function FlashcardCard({ word, flipped, onFlip, onGood, passed })
           <Stack spacing={1.25} alignItems="center" sx={{ flex: 1 }}>
             {/* 뜻 크게 */}
             <Typography
-              sx={{ fontWeight: 900, lineHeight: 1.15, fontSize: { xs: 28, sm: 32, md: 36 } }}
+              sx={{  lineHeight: 1.15, fontSize: { xs: 28, sm: 32, md: 36 } }}
             >
               {ko}
             </Typography>
@@ -178,7 +178,7 @@ export default function FlashcardCard({ word, flipped, onFlip, onGood, passed })
                 onClick={(e) => e.stopPropagation()}
               >
                 <Stack direction="row" alignItems="center" justifyContent="space-between">
-                  <Typography variant="body1" sx={{ fontWeight: 700 }}>
+                  <Typography variant="body1" sx={{ }}>
                     {sentence || "예문 없음"}
                   </Typography>
                   {sentence && (

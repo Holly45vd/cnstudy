@@ -106,7 +106,7 @@ export default function GrammarAll() {
     <Stack spacing={2.5} sx={{ p: { xs: 2, md: 3 } }}>
       {/* 헤더/도구 */}
       <Stack direction="row" alignItems="center" spacing={2} flexWrap="wrap">
-        <Typography variant="h6" sx={{ fontWeight: 700 }}>📚 전체 문법</Typography>
+        <Typography variant="h6" >📚 전체 문법</Typography>
         <Chip label={`결과: ${filtered.length} 문법 항목`} />
         <Box sx={{ flex: 1 }} />
 
@@ -156,9 +156,9 @@ export default function GrammarAll() {
             <Accordion key={idx} defaultExpanded={expandAll} disableGutters sx={{ borderRadius: 2, overflow: "hidden", bgcolor: "#fff" }}>
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Stack spacing={0.5} sx={{ width: "100%" }}>
-                  <Typography sx={{ fontWeight: 700 }}>
+                  <Typography>
                     {title}
-                    <Typography component="span" sx={{ color: "text.secondary", ml: 1, fontWeight: 400 }}>
+                    <Typography component="span" sx={{ color: "text.secondary", ml: 1 }}>
                       {` · Unit ${g.unitId}`}
                     </Typography>
                   </Typography>
@@ -180,7 +180,7 @@ export default function GrammarAll() {
                   {examples.map((ex, i) => (
                     <Box key={i} sx={{ p: 1.25, border: "1px solid rgba(0,0,0,0.08)", borderRadius: 1.5, bgcolor: "#fafafa" }}>
                       {/* 중국어 문장 */}
-                      <Typography sx={{ fontWeight: 700 }}>{ex.zh}</Typography>
+                      <Typography >{ex.zh}</Typography>
 
                       {/* 병음 / 한국식 발음 */}
                       {(showPinyin || showPron) && (ex.py || ex.pronunciation) ? (

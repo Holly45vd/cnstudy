@@ -142,7 +142,7 @@ export default function VocabularySection() {
                   }}
                 >
                   <Stack direction="row" spacing={1} alignItems="baseline">
-                    <Typography variant="h6" fontWeight={700}>
+                    <Typography variant="h6" >
                       {w.zh}
                     </Typography>
                     {w.pinyin && (

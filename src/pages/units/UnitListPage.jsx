@@ -48,7 +48,7 @@ const navigate = useNavigate();
 
   return (
     <Stack spacing={2}>
-      <Typography variant="h5" fontWeight={700}>
+      <Typography variant="h5" >
         유닛 목록
     
     <Button
@@ -90,7 +90,7 @@ const navigate = useNavigate();
                   >
                     <ListItemText
                       primary={
-                        <Typography variant="subtitle1" fontWeight={600}>
+                        <Typography variant="subtitle1" >
                           {u.title || `유닛 ${u.id}`}
                         </Typography>
                       }

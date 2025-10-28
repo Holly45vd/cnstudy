@@ -74,7 +74,7 @@ function VocabCardLiteInner(props) {
       <Box sx={{ display: "grid", rowGap: 0.5 }}>
         <Typography
           variant="h5"
-          sx={{ fontWeight: 700, lineHeight: 1.2, letterSpacing: 0 }}
+          sx={{ lineHeight: 1.2, letterSpacing: 0 }}
         >
           {zh}
         </Typography>
