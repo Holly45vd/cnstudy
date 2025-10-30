@@ -1,3 +1,4 @@
+// src/pages/card/FlashcardsPage.jsx
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import {
   Container, Stack, Typography, LinearProgress, Alert, Button,
@@ -101,15 +102,24 @@ export default function FlashcardsPage() {
   const [user, setUser] = useState(null);
   const [units, setUnits] = useState([]);
   const [unitsError, setUnitsError] = useState("");
-  const [selectedUnitIds, setSelectedUnitIds] = useState(() =>
-    unitIdParam ? [String(unitIdParam)] : []
-  );
+
+  const [selectedUnitIds, setSelectedUnitIds] = useState(() => {
+    const fromUrl = unitIdParam ? [String(unitIdParam)] : [];
+    const saved = JSON.parse(localStorage.getItem("flashcards:selectedUnits") || "[]");
+    return fromUrl.length ? fromUrl : saved;
+  });
 
   const [unitWordsAll, setUnitWordsAll] = useState([]);
   const [dailyWordsAll, setDailyWordsAll] = useState([]);
-  const [includeDaily, setIncludeDaily] = useState(true);
-  const [onlyWithSentence, setOnlyWithSentence] = useState(false);
-  const [order, setOrder] = useState("shuffled");
+  const [includeDaily, setIncludeDaily] = useState(() => {
+    const v = localStorage.getItem("flashcards:includeDaily");
+    return v === null ? true : v === "1";
+  });
+  const [onlyWithSentence, setOnlyWithSentence] = useState(() => {
+    const v = localStorage.getItem("flashcards:onlyWithSentence");
+    return v === "1";
+  });
+  const [order, setOrder] = useState(() => localStorage.getItem("flashcards:order") || "shuffled");
 
   const [queue, setQueue] = useState([]);
   const [idx, setIdx] = useState(0);
@@ -118,6 +128,7 @@ export default function FlashcardsPage() {
   const [loadingDaily, setLoadingDaily] = useState(false);
   const [passedIds, setPassedIds] = useState(() => new Set());
 
+  /* Auth */
   useEffect(() => {
     const auth = getAuth();
     return onAuthStateChanged(auth, (u) => setUser(u || null));
@@ -138,6 +149,20 @@ export default function FlashcardsPage() {
     })();
     return () => { alive = false; };
   }, []);
+
+  /* 선택 유닛 로컬 저장 */
+  useEffect(() => {
+    localStorage.setItem("flashcards:selectedUnits", JSON.stringify(selectedUnitIds));
+  }, [selectedUnitIds]);
+  useEffect(() => {
+    localStorage.setItem("flashcards:includeDaily", includeDaily ? "1" : "0");
+  }, [includeDaily]);
+  useEffect(() => {
+    localStorage.setItem("flashcards:onlyWithSentence", onlyWithSentence ? "1" : "0");
+  }, [onlyWithSentence]);
+  useEffect(() => {
+    localStorage.setItem("flashcards:order", order);
+  }, [order]);
 
   /* 유닛 변경 시 단어 로드 */
   useEffect(() => {
@@ -243,7 +268,14 @@ export default function FlashcardsPage() {
     const base = onlyWithSentence
       ? wordsAll.filter(w => (w?.sentence || w?.sentenceKo || w?.sentencePinyin))
       : wordsAll.slice();
-    return order === "original" ? base : shuffle(base);
+    const seed = Number(localStorage.getItem("flashcards:shuffleSeed")) || Date.now();
+    if (order === "original") return base;
+    const mixed = shuffle(base, seed);
+    // 첫 계산 시 시드 저장(세션 내 랜덤 재현)
+    if (!localStorage.getItem("flashcards:shuffleSeed")) {
+      localStorage.setItem("flashcards:shuffleSeed", String(seed));
+    }
+    return mixed;
   }, [wordsAll, onlyWithSentence, order]);
 
   /* 상태 초기화 */
@@ -303,10 +335,25 @@ export default function FlashcardsPage() {
 
   const loading = loadingUnit || loadingDaily;
 
+  /* 키보드 단축키: ← → Space */
+  useEffect(() => {
+    const onKey = (e) => {
+      if (!current) return;
+      if (e.code === "ArrowLeft") { e.preventDefault(); prev(); }
+      else if (e.code === "ArrowRight") { e.preventDefault(); next(); }
+      else if (e.code === "Space") { e.preventDefault(); flip(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [current, next, prev, flip]);
+
   return (
     <Container maxWidth="md" sx={{ py: 3 }}>
       <Stack spacing={3}>
-        <Typography variant="h5" >Flashcards</Typography>
+        <Typography variant="h5">Flashcards</Typography>
+
+        {/* 에러 표시 */}
+        {unitsError ? <Alert severity="error">{unitsError}</Alert> : null}
 
         {/* ===== 유닛 선택 + 진행상황 ===== */}
         <Stack
@@ -392,16 +439,16 @@ export default function FlashcardsPage() {
             }
             label="예문 있는 것만"
           />
-             
-  {/* ✅ current 존재할 때만 Chip 렌더링 */}
-  {current && (
-    <Chip
-      label={current.__source === "DAILY" ? "DAILY" : "UNIT"}
-      size="small"
-      variant="outlined"
-      sx={{ mb: 1 }}
-    />
-  )}
+
+          {/* 현재 단어 출처 */}
+          {current && (
+            <Chip
+              label={current.__source === "DAILY" ? "DAILY" : "UNIT"}
+              size="small"
+              variant="outlined"
+              sx={{ mb: 1 }}
+            />
+          )}
         </Stack>
 
         {loading && <LinearProgress />}
@@ -413,8 +460,6 @@ export default function FlashcardsPage() {
 
         {words.length > 0 && current && (
           <>
-
-
             <FlashcardCard
               word={current}
               flipped={flipped}
