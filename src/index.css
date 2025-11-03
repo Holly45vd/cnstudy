@@ -17,7 +17,6 @@ body {
 body {
   font-family:
     "Chocolate Classical Sans",
-    "WDXL Lubrifont SC",
     "Noto Sans SC",
     "ZCOOL KuaiLe",
     sans-serif !important;
@@ -34,7 +33,6 @@ body {
 .MuiChip-root,
 .MuiInputBase-root {
   font-family:
-    "WDXL Lubrifont SC",
     "Noto Sans SC",
     "Chocolate Classical Sans",
     sans-serif !important;
@@ -45,7 +43,7 @@ body {
   font-size: clamp(48px, 7vw, 72px);
   line-height: 1.05;
   font-weight: 900;
-  font-family: "WDXL Lubrifont SC", "Noto Sans SC", sans-serif !important;
+  font-family: "Chocolate Classical Sans", "Noto Sans SC", sans-serif !important;
 }
 
 /* ===== 의미(한글/번역) 표기 ===== */
@@ -58,7 +56,7 @@ body {
 
 /* ===== 제목 / 포인트 강조용 ===== */
 .title-zcool {
-  font-family: "ZCOOL KuaiLe", cursive;
+  font-family: "Chocolate Classical Sans", cursive;
   font-weight: 700;
   letter-spacing: 0.5px;
 }
