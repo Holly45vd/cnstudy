@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/cnstudy/static/css/main.fba9b9cb.css",
-    "main.js": "/cnstudy/static/js/main.084c1e74.js",
+    "main.js": "/cnstudy/static/js/main.43b34d62.js",
     "index.html": "/cnstudy/index.html",
     "main.fba9b9cb.css.map": "/cnstudy/static/css/main.fba9b9cb.css.map",
-    "main.084c1e74.js.map": "/cnstudy/static/js/main.084c1e74.js.map"
+    "main.43b34d62.js.map": "/cnstudy/static/js/main.43b34d62.js.map"
   },
   "entrypoints": [
     "static/css/main.fba9b9cb.css",
-    "static/js/main.084c1e74.js"
+    "static/js/main.43b34d62.js"
   ]
 }
