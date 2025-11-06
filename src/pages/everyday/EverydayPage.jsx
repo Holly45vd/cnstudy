@@ -8,8 +8,8 @@ import { mapToEverydayWord } from "../../lib/wordMapping";
 
 /* ==== MUI ==== */
 import {
-  Container, Stack, Typography, IconButton, TextField, Grid,
-  Paper, Divider, ButtonGroup, Button, ToggleButtonGroup, ToggleButton, Chip
+  Container, Stack, Typography, TextField, Grid,
+  Paper, Divider, ButtonGroup, Button, ToggleButtonGroup, ToggleButton, Chip, Alert
 } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
@@ -50,6 +50,10 @@ export default function EverydayPage() {
   const [words, setWords] = useState([]);
   const [err, setErr] = useState(null);
 
+  // ✅ 실제로 데이터를 가져온 기준 날짜(오늘이 비어 fallback 시 어제 날짜로 표시)
+  const [dataDate, setDataDate] = useState(null);
+  const isFallback = dataDate && dataDate !== date;
+
   // 상세 모달
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState(null);
@@ -59,30 +63,56 @@ export default function EverydayPage() {
     if (paramDate && paramDate !== date) setDate(paramDate);
   }, [paramDate]); // eslint-disable-line
 
-  // 데이터 로드
+  // 데이터 로드 (+ 오늘 비어있으면 어제로 Fallback)
   useEffect(() => {
     let alive = true;
     (async () => {
       setLoading(true);
       setErr(null);
-      try {
-        const daily = await getDaily(date); // doc id == "yyyy-mm-dd"
+      setWords([]);
+      setWordIds([]);
+      setDataDate(null);
+
+      const tryLoad = async (targetDate) => {
+        const daily = await getDaily(targetDate); // doc id == "yyyy-mm-dd"
         const ids = Array.isArray(daily?.wordIds) ? daily.wordIds : [];
+        if (!alive) return { ids: [], targetDate };
+        return { ids, targetDate };
+      };
+
+      try {
+        // 1) 선택된 날짜 먼저
+        let { ids, targetDate } = await tryLoad(date);
+
+        // 2) 비어 있으면 어제 날짜로 한 번 더
+        if (alive && ids.length === 0) {
+          const yday = addDaysLocal(date, -1);
+          const resY = await tryLoad(yday);
+          if (resY.ids.length > 0) {
+            ids = resY.ids;
+            targetDate = resY.targetDate;
+          }
+        }
+
         if (!alive) return;
+
         setWordIds(ids);
 
-        if (ids.length === 0) {
-          setWords([]);
-        } else {
+        if (ids.length > 0) {
           const ws = await getWordsByIds(ids.map(String));
           if (!alive) return;
           setWords(ws);
+          setDataDate(targetDate);
+        } else {
+          // 둘 다 없으면 dataDate는 현재 date로 고정
+          setDataDate(date);
         }
       } catch (e) {
         if (!alive) return;
         setErr(e?.message || String(e));
         setWords([]);
         setWordIds([]);
+        setDataDate(date);
       } finally {
         if (alive) setLoading(false);
       }
@@ -157,6 +187,12 @@ export default function EverydayPage() {
             </Stack>
           </Stack>
 
+          {/* ✅ Fallback 안내 배지 */}
+          {!loading && isFallback && (
+            <Alert severity="info" sx={{ mt: 2, borderRadius: 2 }}>
+              선택한 날짜({date})에는 데이터가 없어서 <strong>{dataDate}</strong>의 단어를 보여줍니다.
+            </Alert>
+          )}
         </Paper>
 
         {/* 카드 그리드: 반응형 1/2/3/4열 */}

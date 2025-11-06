@@ -389,20 +389,7 @@ export default function WordDetailModal({ open, onClose, word }) {
         ) : null}
       </DialogContent>
 
-      <DialogActions>
-        {zh && (
-          <Button onClick={() => speakZh(zh)} startIcon={<VolumeUpIcon />}>
-            중국어 듣기
-          </Button>
-        )}
-        {koPron && (
-          <Button onClick={() => speakKo(koPron)} startIcon={<VolumeUpIcon />}>
-            한글발음 듣기
-          </Button>
-        )}
-        <Box sx={{ flexGrow: 1 }} />
-        <Button onClick={onClose} variant="contained">닫기</Button>
-      </DialogActions>
+     
     </Dialog>
   );
 }

@@ -85,11 +85,11 @@ export default function Navbar() {
                   },
                 }}
               >
-                <BottomNavigationAction label="유닛" value="units" icon={<MenuBookIcon />} />
-                <BottomNavigationAction label="데일리" value="everyday" icon={<TodayIcon />} />
-                <BottomNavigationAction label="문법" value="grammar" icon={<SchoolIcon />} />
-                <BottomNavigationAction label="카드" value="flashcards" icon={<StyleIcon />} />
-                <BottomNavigationAction label="Admin" value="admin" icon={<SettingsIcon />} />
+                <BottomNavigationAction  value="units" icon={<MenuBookIcon />} />
+                <BottomNavigationAction value="everyday" icon={<TodayIcon />} />
+                <BottomNavigationAction value="grammar" icon={<SchoolIcon />} />
+                <BottomNavigationAction  value="flashcards" icon={<StyleIcon />} />
+                <BottomNavigationAction  value="admin" icon={<SettingsIcon />} />
               </BottomNavigation>
             </Box>
           </Toolbar>
@@ -106,27 +106,27 @@ export default function Navbar() {
         >
           <SpeedDialAction
             icon={<MenuBookIcon />}
-            tooltipTitle="유닛"
+            tooltipTitle=""
             onClick={() => nav("/")}
           />
           <SpeedDialAction
             icon={<TodayIcon />}
-            tooltipTitle="데일리"
+            tooltipTitle=""
             onClick={() => nav(`/everyday/${today()}`)}
           />
           <SpeedDialAction
             icon={<SchoolIcon />}
-            tooltipTitle="문법"
+            tooltipTitle=""
             onClick={() => nav("/grammar")}
           />
           <SpeedDialAction
             icon={<StyleIcon />}
-            tooltipTitle="카드"
+            tooltipTitle=""
             onClick={() => nav("/flashcards")}
           />
           <SpeedDialAction
             icon={<SettingsIcon />}
-            tooltipTitle="Admin"
+            tooltipTitle=""
             onClick={() => nav("/admin")}
           />
         </SpeedDial>

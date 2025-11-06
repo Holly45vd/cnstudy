@@ -1,25 +1,18 @@
+// src/pages/units/UnitListPage.jsx
 import React, { useEffect, useState } from "react";
 import { listUnits } from "../../firebase/firestore";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-
-/* MUI */
 import {
-  Container,
-  Grid,
-  Card,
-  CardActionArea,
-  CardContent,
-  Typography,
-  Skeleton,
-  Alert,
-  Stack,
-  Box,
-  Button,
-  Chip,
-  Divider,
+  Container, Grid, Card, CardActionArea, CardContent, Typography,
+  Skeleton, Alert, Stack, Button, Box
 } from "@mui/material";
 import LibraryBooksIcon from "@mui/icons-material/LibraryBooks";
 import RecordVoiceOverIcon from "@mui/icons-material/RecordVoiceOver";
+
+const truncate = (text = "", max = 10) => {
+  const t = String(text);
+  return t.length > max ? t.slice(0, max) + "…" : t;
+};
 
 export default function UnitListPage() {
   const [units, setUnits] = useState([]);
@@ -38,16 +31,12 @@ export default function UnitListPage() {
         setUnits(Array.isArray(data) ? data : []);
       } catch (e) {
         if (!alive) return;
-        const msg = e?.message || e?.code || String(e);
-        setErr(msg);
-        console.error("listUnits error:", e);
+        setErr(e?.message || e?.code || String(e));
       } finally {
         if (alive) setLoading(false);
       }
     })();
-    return () => {
-      alive = false;
-    };
+    return () => { alive = false; };
   }, []);
 
   const skeletons = Array.from({ length: 6 });
@@ -64,104 +53,141 @@ export default function UnitListPage() {
       >
         <Stack direction="row" spacing={1.5} alignItems="center">
           <LibraryBooksIcon color="primary" />
-          <Typography variant="h4" fontWeight={800}>
-            유닛 목록
-          </Typography>
+          <Typography variant="h4" fontWeight={800}>유닛 목록</Typography>
         </Stack>
-
         <Button
           variant="outlined"
           startIcon={<RecordVoiceOverIcon />}
           onClick={() => navigate("/pronunciation")}
-          sx={{
-            borderRadius: 2,
-            textTransform: "none",
-            fontWeight: 600,
-          }}
+          sx={{ borderRadius: 2, textTransform: "none", fontWeight: 600 }}
         >
           병음 발음하기
         </Button>
       </Stack>
 
-      {/* 로딩/에러/데이터 */}
+      {/* 에러 */}
       {err && (
         <Alert severity="error" sx={{ borderRadius: 2, mb: 2 }}>
           초기 로드 에러: {err}
         </Alert>
       )}
 
-      {loading ? (
-        <Grid container spacing={2}>
+      {/* 로딩 */}
+      {loading && (
+        <Grid container spacing={2} alignItems="stretch">
           {skeletons.map((_, i) => (
-            <Grid item xs={12} sm={6} key={i}>
-              <Card sx={{ borderRadius: 3 }}>
+            <Grid key={i} item xs={12} sm={6} md={4}>
+              <Card sx={{ borderRadius: 3, height: 220 }}>
                 <CardContent>
-                  <Skeleton width="60%" height={28} />
-                  <Skeleton width="40%" height={20} sx={{ mt: 1 }} />
+                  <Skeleton width="70%" height={28} />
+                  <Skeleton width="40%" height={18} sx={{ mt: 1 }} />
                 </CardContent>
               </Card>
             </Grid>
           ))}
         </Grid>
-      ) : units.length === 0 ? (
+      )}
+
+      {/* 비어 있음 */}
+      {!loading && units.length === 0 && (
         <Alert severity="info" sx={{ borderRadius: 2 }}>
           등록된 유닛이 없습니다.
         </Alert>
-      ) : (
-        <Grid container spacing={2}>
-          {units.map((u) => (
-            <Grid key={u.id} item xs={12} sm={6}>
-              <Card
-                variant="outlined"
-                sx={{
-                  borderRadius: 3,
-                  height: "100%",
-                  transition: "0.25s",
-                  "&:hover": {
-                    boxShadow: 3,
-                    borderColor: "primary.main",
-                    transform: "translateY(-4px)",
-                  },
-                }}
-              >
-                <CardActionArea
-                  component={RouterLink}
-                  to={`/units/${u.id}`}
-                  sx={{ height: "100%" }}
+      )}
+
+      {/* 목록 */}
+      {!loading && units.length > 0 && (
+        <Grid container spacing={2} alignItems="stretch">
+          {units.map((u) => {
+            const title = u.title || `유닛 ${u.id}`;
+            const themeShort = truncate(u.theme || "", 10);
+
+            return (
+              <Grid key={u.id} item xs={12} sm={6} md={4}>
+                <Card
+                  variant="outlined"
+                  sx={{
+                    height: 220, // ✅ 고정 높이
+                    borderRadius: 3,
+                    borderColor: "rgba(0,0,0,0.06)",
+                    boxShadow: "0 4px 10px rgba(255,107,107,0.08)",
+                    overflow: "hidden",
+                    transition: "transform .2s ease, box-shadow .2s ease",
+                    display: "flex",
+                    flexDirection: "column",
+                    "&:hover": {
+                      transform: "translateY(-4px)",
+                      boxShadow: "0 12px 24px rgba(255,107,107,0.18)",
+                    },
+                    "&::before": {
+                      content: '""',
+                      position: "absolute",
+                      top: -36,
+                      right: -36,
+                      width: 110,
+                      height: 110,
+                      borderRadius: "50%",
+                      background:
+                        "linear-gradient(135deg, rgba(255,107,107,.22), rgba(165,230,200,.22))",
+                      filter: "blur(6px)",
+                    },
+                  }}
                 >
-                  <CardContent>
-                    <Stack spacing={1}>
-                      <Typography variant="h6" fontWeight={700}>
-                        {u.title || `유닛 ${u.id}`}
+                  <CardActionArea
+                    component={RouterLink}
+                    to={`/units/${u.id}`}
+                    sx={{
+                      flex: 1,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <CardContent
+                      sx={{
+                        textAlign: "center",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        height: "100%",
+                        width: "100%",
+                        p: 2,
+                      }}
+                    >
+                      <Typography
+                        variant="h6"
+                        fontWeight={800}
+                        sx={{
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          color: "#0A0F29",
+                        }}
+                        title={title}
+                      >
+                        {title}
                       </Typography>
-                      {u.theme && (
-                        <Typography variant="body2" color="text.secondary">
-                          {u.theme}
-                        </Typography>
-                      )}
-                      <Divider sx={{ my: 1 }} />
-                      <Stack direction="row" spacing={1}>
-                        <Chip
-                          label={`ID: ${u.id}`}
-                          size="small"
-                          color="default"
-                          variant="outlined"
-                        />
-                        {u.level && (
-                          <Chip
-                            label={`Level ${u.level}`}
-                            size="small"
-                            color="primary"
-                            variant="outlined"
-                          />
-                        )}
-                      </Stack>
-                    </Stack>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            </Grid>
-          ))}
+
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{
+                          mt: 1,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                        title={u.theme || ""}
+                      >
+                        {themeShort}
+                      </Typography>
+                    </CardContent>
+                  </CardActionArea>
+                </Card>
+              </Grid>
+            );
+          })}
         </Grid>
       )}
     </Container>

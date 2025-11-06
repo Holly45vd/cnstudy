@@ -30,10 +30,7 @@ export default function DailyCard({ word }) {
           </Stack>
         )}
       </CardContent>
-      <CardActions>
-        <Button size="small" onClick={() => speakSafe(zh || "", { lang: "zh-CN", rate: 0.95 })}>중 ▶</Button>
-        <Button size="small" onClick={() => speakSafe(sentenceKoPronunciation || ko || "", { lang: "ko-KR" })}>한 ▶</Button>
-      </CardActions>
+
     </Card>
   );
 }
