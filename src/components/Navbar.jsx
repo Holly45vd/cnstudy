@@ -1,4 +1,3 @@
-// src/components/Navbar.jsx
 import React, { useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -34,7 +33,7 @@ export default function Navbar() {
 
   // 어떤 탭이 활성인지 계산
   const value = useMemo(() => {
-    if (pathname.startsWith("/grammar")) return "grammar";
+    if (pathname.startsWith("/grammar") || pathname.startsWith("/sentence")) return "grammar";
     if (pathname.startsWith("/everyday")) return "everyday";
     if (pathname.startsWith("/flashcards")) return "flashcards";
     if (pathname.startsWith("/admin")) return "admin";
@@ -45,7 +44,7 @@ export default function Navbar() {
     switch (newValue) {
       case "units": nav("/"); break;
       case "everyday": nav(`/everyday/${today()}`); break;
-      case "grammar": nav("/grammar"); break;
+      case "grammar": nav("/grammar"); break;               // 허브로 이동
       case "flashcards": nav("/flashcards"); break;
       case "admin": nav("/admin"); break;
       default: break;
@@ -55,7 +54,7 @@ export default function Navbar() {
   // 스크롤 내리면 AppBar 숨김
   const trigger = useScrollTrigger({ disableHysteresis: true, threshold: 80 });
 
-  // 유닛 상세 페이지에선 글로벌 SpeedDial 숨김 (유닛용 SpeedDial이 대신 표시됨)
+  // 유닛 상세 페이지에선 글로벌 SpeedDial 숨김
   const onUnitDetail = /^\/units\/[^/]+/.test(pathname);
 
   return (
@@ -85,11 +84,11 @@ export default function Navbar() {
                   },
                 }}
               >
-                <BottomNavigationAction  value="units" icon={<MenuBookIcon />} />
+                <BottomNavigationAction value="units" icon={<MenuBookIcon />} />
                 <BottomNavigationAction value="everyday" icon={<TodayIcon />} />
                 <BottomNavigationAction value="grammar" icon={<SchoolIcon />} />
-                <BottomNavigationAction  value="flashcards" icon={<StyleIcon />} />
-                <BottomNavigationAction  value="admin" icon={<SettingsIcon />} />
+                <BottomNavigationAction value="flashcards" icon={<StyleIcon />} />
+                <BottomNavigationAction value="admin" icon={<SettingsIcon />} />
               </BottomNavigation>
             </Box>
           </Toolbar>
@@ -102,7 +101,7 @@ export default function Navbar() {
           ariaLabel="global quick nav"
           sx={{ position: "fixed", bottom: 16, right: 16, zIndex: 1500 }}
           icon={<SpeedDialIcon />}
-          FabProps={{ color: "secondary" }} // 🔵/🟣 구분: 글로벌은 secondary
+          FabProps={{ color: "secondary" }}
         >
           <SpeedDialAction
             icon={<MenuBookIcon />}
