@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkcnstudy=self.webpackChunkcnstudy||[]).push([[88],{250:e=>{e.exports=JSON.parse('{"\u5b66\u6821":["school"],"\u4e3e\u884c":["to hold (a meeting, ceremony)"],"\u660e\u5929":["tomorrow"],"\u97f3\u4e50\u4f1a":["concert"],"\u4e2d\u56fd":["China"],"\u4eba":["person; people"]}')}}]);
